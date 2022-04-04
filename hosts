@@ -1,0 +1,49 @@
+[patroni_cluster]
+patroni1   ansible_host=172.19.99.82
+patroni2   ansible_host=172.19.99.81
+patroni3   ansible_host=172.19.99.80
+
+[etcd]
+test4	   ansible_host=172.19.99.83
+
+[test1]
+patroni1   ansible_host=172.19.99.82
+
+[test2]
+patroni2   ansible_host=172.19.99.81
+
+[test3]
+patroni3   ansible_host=172.19.99.80
+
+[haproxy]
+test5	ansible_host=172.19.99.84
+
+
+
+#######################################
+####VARS###############################
+#######################################
+
+[haproxy:vars]
+ansible_user=root
+ansible_password=XcvD552! 
+
+[test1:vars]
+ansible_user=root
+ansible_password=XcvD552!
+
+[test2:vars]
+ansible_user=root
+ansible_password=XcvD552!
+
+[test3:vars]
+ansible_user=root
+ansible_password=XcvD552!
+
+[patroni_cluster:vars]
+ansible_user=root
+ansible_password=XcvD552!
+
+[etcd:vars]
+ansible_user=root
+ansible_password=XcvD552!
