@@ -1,0 +1,137 @@
+---
+- name: Install Patroni cluster
+  hosts: patroni_cluster
+  become_user: root
+
+  tasks:
+    - name: Update & Upgrade System
+      shell: 'apt update -y && apt upgrade -y'
+
+    - name: Install PSQL
+      shell: 'sudo apt -y install postgresql postgresql-server-dev-all'
+      
+    - name: Stop PSQL
+      service: 
+       name: postgresql 
+       state: stopped  
+
+#    - name: Create symlink
+#      shell: 'ln -s /usr/lib/postgresql/11/bin/* /usr/sbin/'
+
+    - name: Install Python and Python-pip packages
+      shell: 'sudo apt -y install python python-pip && sudo pip install --upgrade setuptools && sudo pip install psycopg2 && sudo pip install patroni && pip install python-etcd'
+      
+- name: Configuring Patroni server-1
+  hosts: test1
+  become_user: root
+
+  tasks:
+    - name: Configuring Patroni server-1
+      copy: 
+       src: /etc/patroni1.yml 
+       dest: /etc/patroni.yml
+       remote_src: false
+       owner: root 
+       group: root 
+       mode: 644 
+       force: yes
+
+- name: Configuring Patroni server-2
+  hosts: test2
+  become: yes
+
+  tasks:
+    - name: Configuring Patroni server-2
+      ansible.builtin.copy: 
+       src: /etc/patroni2.yml 
+       dest: /etc/patroni.yml
+       remote_src: false
+       owner: root 
+       group: root 
+       mode: 644 
+       force: yes
+
+- name: Configuring Patroni server-3
+  hosts: test3
+  become: yes
+
+  tasks:
+    - name: Configuring Patroni server-3
+      ansible.builtin.copy: 
+       src: /etc/patroni3.yml 
+       dest: /etc/patroni.yml
+       remote_src: false
+       owner: root 
+       group: root 
+       mode: 644 
+       force: yes
+
+- name: Settings patroni
+  hosts: patroni_cluster
+  become: yes
+
+  tasks:
+    - name: Settings patroni
+      shell: 'sudo mkdir -p /data/patroni && sudo chown postgres:postgres /data/patroni && sudo chmod 700 /data/patroni'
+    - name: Scp conf
+      ansible.builtin.copy: 
+        src: /etc/patroni.service 
+        dest: /etc/systemd/system/patroni.service
+        remote_src: false
+        owner: root 
+        group: root 
+        mode: 644 
+        force: yes
+
+   
+- name: Configuring Etcd
+  hosts: etcd
+  become: yes
+
+  tasks:
+    - name: Install Etcd
+      shell: 'sudo apt -y install etcd'
+    - name: Configuring Etcd
+      ansible.builtin.copy: 
+       src: /etc/etcd 
+       dest: /etc/default/etcd
+       remote_src: false
+       owner: root 
+       group: root 
+       mode: 644 
+       force: yes
+    - name: start etcd  
+      service: 
+       name: etcd 
+       state: restarted
+
+- name: Start patroni
+  hosts: patroni_cluster
+  become: yes
+
+  tasks:
+    - name: Start patroni
+      service: 
+       name: patroni 
+       state: started
+
+- name: Configuring and install haproxy
+  hosts: haproxy
+  become: yes
+
+  tasks:
+    - name: Install haproxy
+      shell: 'sudo apt -y install haproxy'
+    - name: Configuring haproxy
+      ansible.builtin.copy: 
+       src: /etc/haproxy.cfg 
+       dest: /etc/haproxy/haproxy.cfg
+       remote_src: false
+       owner: root 
+       group: root 
+       mode: 644 
+       force: yes
+    - name: Start haproxy
+      service: 
+       name: haproxy 
+       state: restarted
